@@ -1,0 +1,12 @@
+data/
+checkpoints/
+results/
+figures/
+__pycache__/
+*.pyc
+*.pyo
+.env
+*.log
+*.out
+wandb/
+.DS_Store
