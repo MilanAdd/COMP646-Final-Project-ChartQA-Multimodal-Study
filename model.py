@@ -85,6 +85,8 @@ class ChartQAModel(nn.Module):
 
         input_dim = config.CLIP_EMBED_DIM * 2
         self.fusion = FusionMLP(input_dim=input_dim,hidden_dim = config.MLP_HIDDEN_DIM,num_classes=num_classes, dropout = config.MLP_DROPOUT)
+
+        self._report_params()
         
     def encode_img(self,pixel_values:torch.Tensor) -> torch.Tensor:
         outputs = self.visual_encoder(pixel_values=pixel_values)
@@ -104,6 +106,14 @@ class ChartQAModel(nn.Module):
         combined = torch.cat([visual_feats,text_feats],dim=-1)
         logits = self.fusion(combined)
         return logits
+    
+    def _report_params(self) -> None:
+        trainable = sum(p.numel() for p in self.parameters() if p.requires_grad)
+        total = sum(p.numel() for p in self.parameters())
+        mode = "LoRA" if self.use_lora else "Frozen CLIP"
+        print(f"[Model] Mode: {mode} | "
+              f"Trainable: {trainable:,} / {total:,} params "
+              f"({100 * trainable / total:.2f}%)")
     
 
 def get_tokenizer(clip_model_name:str = config.CLIP_NAME):
