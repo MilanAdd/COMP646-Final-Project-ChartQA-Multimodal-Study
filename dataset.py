@@ -58,6 +58,8 @@ def build_answer_vocab(hf_train_split,vocab_size:int) -> dict:
         counts[answer]+=1
     
     most_freq = [answer for answer,_ in counts.most_common(vocab_size)]
+
+    # index 0 assigned to UNK, indices afterwards are assigned actual answers
     answer2idx = {UNK_TOKEN:0}
     for idx,ans in enumerate(most_freq,start=1):
         answer2idx[ans] = idx
@@ -65,6 +67,7 @@ def build_answer_vocab(hf_train_split,vocab_size:int) -> dict:
     print(f"[Vocab] Built vocabulary of {len(answer2idx)} entries "
           f"({vocab_size} answers + UNK)")
 
+    # Showing what proportion of training answers are correct
     total = sum(counts.values())
     covered = sum(cnt for ans,cnt in counts.items() if ans in answer2idx)
     print(f"[Vocab] Coverage on train set: {covered/total:.1%} of answers")
@@ -101,8 +104,8 @@ def normalize_answer(answer:str) -> str:
     Keeps numeric formatting the same
     """
     answer = answer.strip().lower()
-    answer = re.sub(r"[?!;,.]+$","",answer)
-    answer = re.sub(r"\s+","",answer)
+    answer = re.sub(r"[?!;,.]+$","",answer) # trailing punctuation
+    answer = re.sub(r"\s+","",answer) # remove unnecessary whitespace
     return answer
 
 def is_numeric(s:str) -> bool:
@@ -145,15 +148,30 @@ def correct_relaxed(pred:str,gold:str,tol:float=config.RELAXED_TOLERANCE) -> boo
 
 CHART_TYPE_LOOKUP_PATH = os.path.join(config.DATA_DIR,"chart_type_lookup.json")
 
+# Mapping raw annotation type strings to cleaner labels
 _TYPE_MAP = {"v_bar":"bar","h_bar":"bar","line":"line","pie":"pie","scatter":"scatter"}
 
 def build_chart_type_lookup(annotations_dir:str,save_path:str=CHART_TYPE_LOOKUP_PATH) -> dict:
+    """
+    Traverse through annotations directory of ChartQA dataset, build lookup dictionary that maps imgname to chart_type
+
+    Each annotation JSON file is named after its chart image (e.g. "10095.json" -> "10095.png"), contains high level "type" key
+    with vals "v_bar", "h_bar", "line" or "pie"
+
+    Arguments:
+        annotations_dir: path to folder that has annotation JSONs.
+                         Should cover all splits, point it at merged
+                         folder or call this function once per split
+                         and merge.
+        save_path:       where to cache resulting JSON lookup
+    """
     lookup = {}
     missing_type = 0
 
     for split in ("train","val","test"):
         split_dir = os.path.join(annotations_dir,split)
         if not os.path.isdir(split_dir):
+            # trying flat structure (meaning all JSONs are just in one folder)
             split_dir = annotations_dir
 
         json_files = [f for f in os.listdir(split_dir) if f.endswith(".json")]
@@ -177,6 +195,7 @@ def build_chart_type_lookup(annotations_dir:str,save_path:str=CHART_TYPE_LOOKUP_
     print(f"[ChartType] Total entries: {len(lookup)} | "
           f"Unknown or missing type: {missing_type}")
     
+    # Report distribution
     dist = Counter(lookup.values())
     for ct, cnt in sorted(dist.items()):
         print(f" {ct:10s}: {cnt:,}")
@@ -195,6 +214,17 @@ def load_chart_type_lookup(path:str = CHART_TYPE_LOOKUP_PATH) -> dict:
     return lookup
 
 def get_chart_type_lookup(annotations_dir:str = None, force_rebuild: bool = False) -> dict:
+    """
+    Load chart type lookup for cache or build from scratch
+
+    Arguments:
+        annotations_dir: path to annotation JSONs (needed if building)
+        force_rebuild: if True, rebuild even if cache exists
+
+    Results:
+        lookup dict mapping imgname to chart_type, or empty dict if annotations arent'
+        available (chart_type will fall back to "unknown")
+    """
     if os.path.exists(CHART_TYPE_LOOKUP_PATH) and not force_rebuild:
         return load_chart_type_lookup()
     
