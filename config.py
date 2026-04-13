@@ -16,6 +16,11 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 # also NFS-mounted so available on login nodes, don't need to deal with purging unlike $SHARED_SCRATCH
 DATA_DIR = os.path.join(os.environ.get("WORK",PROJECT_ROOT),"chartqa_data")
 
+# Where annotation JSON files from ChartQA dataset are downloaded
+# Structure is ANNOTATIONS_DIR/{train,val,test}/*.json
+# Used purely for chart type breakdown analysis
+ANNOTATIONS_DIR = os.path.join(DATA_DIR,"annotations")
+
 # Where trained model checkpoints are saved
 CHECKPOINT_DIR = os.path.join(PROJECT_ROOT,"checkpoints")
 

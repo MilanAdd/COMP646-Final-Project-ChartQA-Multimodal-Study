@@ -1,3 +1,16 @@
+"""
+This file houses the different model definitions for the ChartQA project.
+
+Three variants are supported and they all share the same ChartQAModel class:
+    1. Frozen CLIP - both visual and text encoders are frozen. Only the MLP fusion head is trained.
+                     It tests how much chart understanding is already in CLIP's pretrained representations
+    2. LoRA CLIP   - the visual encoder gets LoRA adapters (q_proj and v_proj). The text encoder stays frozen, but
+                     the MLP head is trained. It tests whether visual domain adaptation helps.
+    3. Zero-shot   - handled separately; requires no training
+"""
+
+import os
+
 import torch 
 import torch.nn as nn
 from transformers import CLIPModel,CLIPTokenizerFast
@@ -135,3 +148,28 @@ def load_checkpoint(path:str, model:ChartQAModel,optimizer=None) -> dict:
     print(f"[Checkpoint] Loaded from {path} "
           f"(epoch = {checkpoint['epoch']},val_acc={checkpoint['val_acc']:.4f})")
     return checkpoint
+
+
+# For good measure/practice
+if __name__ == "__main__":
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"[Sanity] Device: {device}")
+
+    num_classes = config.VOCAB_SIZE + 1
+
+    print("\n ===== Frozen CLIP =====")
+    frozen_model = ChartQAModel(num_classes=num_classes,use_lora=False).to(device)
+
+    print("\n ===== LoRA CLIP =====")
+    lora_model = ChartQAModel(num_classes=num_classes,use_lora=True).to(device)
+
+    tokenizer = get_tokenizer()
+    questions = ["What is the value of the tallest bar?", "Which year had the highest sales?"]
+    tokens = tokenize_questions(questions,tokenizer,device)
+    pixel_vals = torch.randn(2,3,config.IMAGE_SIZE,config.IMAGE_SIZE).to(device)
+
+    with torch.no_grad():
+        logits = frozen_model(pixel_vals,**tokens)
+    
+    print(f"\n[Sanity] Output logits shape: {logits.shape}")
+    print("[Sanity] Forward pass OK")
