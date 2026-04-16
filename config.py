@@ -11,31 +11,32 @@ import os
 # Root directory of the project, which is one level above where this file is
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-# Directory where downloaded ChartQA data, cached HuggingFace models are stored.
-# On NOTS cluster specifically, this is the $WORK storage space with a 2TB quota/group,
-# also NFS-mounted so available on login nodes, don't need to deal with purging unlike $SHARED_SCRATCH
-DATA_DIR = os.path.join(os.environ.get("WORK",PROJECT_ROOT),"chartqa_data")
+# Large data: HuggingFace datasets, annotation JSONs, vocab cache.
+# SLURM jobs override this via the CHARTQA_DATA_DIR env var.
+DATA_DIR = os.environ.get("CHARTQA_DATA_DIR",os.path.join(PROJECT_ROOT,"data"))
 
 # Where annotation JSON files from ChartQA dataset are downloaded
 # Structure is ANNOTATIONS_DIR/{train,val,test}/*.json
 # Used purely for chart type breakdown analysis
 ANNOTATIONS_DIR = os.path.join(DATA_DIR,"annotations")
 
+_output_root = os.environ.get("CHARTQA_OUTPUT_DIR",PROJECT_ROOT)
+
 # Where trained model checkpoints are saved
-CHECKPOINT_DIR = os.path.join(PROJECT_ROOT,"checkpoints")
+CHECKPOINT_DIR = os.path.join(_output_root,"checkpoints")
 
 # Where evaluation results (in JSON and/or CSV) are written
-RESULTS_DIR = os.path.join(PROJECT_ROOT,"results")
+RESULTS_DIR = os.path.join(_output_root,"results")
 
 # Where GradCAM figures and other graphs/plots are saved
-FIGURES_DIR = os.path.join(PROJECT_ROOT,"figures")
+FIGURES_DIR = os.path.join(_output_root,"figures")
 
 # Make directories if they're not already present
 for _dir in [DATA_DIR,CHECKPOINT_DIR,RESULTS_DIR,FIGURES_DIR]:
     os.makedirs(_dir,exist_ok=True)
 
 # HF dataset ID for ChartQA
-HF_DATASET_NAME = "/ahmed-masry/ChartQA"
+HF_DATASET_NAME = "ahmed-masry/ChartQA"
 
 # Amount of most frequent training answers to keep in vocabulary
 # Answers outside vocab are labeled as UNK (unknown words outside vocab), not included in accuracy

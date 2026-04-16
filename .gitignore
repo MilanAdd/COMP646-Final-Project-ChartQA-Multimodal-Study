@@ -10,3 +10,4 @@ __pycache__/
 *.out
 wandb/
 .DS_Store
+jobs/config.sh
