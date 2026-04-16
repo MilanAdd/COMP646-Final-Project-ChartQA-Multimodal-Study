@@ -18,24 +18,46 @@ from transformers import CLIPModel,CLIPTokenizerFast
 import config
 
 class LoRALinear(nn.Module):
+    """
+    Wraps an existing linear layer with a LoRA adapter
+
+    What the forward pass is compute this formula:
+        y = W_frozen @ x + (alpha/r) * B @ A @ x
+
+        W_frozen contain the original weights of the model and are frozen. We only train
+        a smaller subset of parameters, which are the lower-rank matrices A and B that adjusts 
+        for the original weights so that the outputs match the desired application. 
+        We do random initialization of a Gaussian for matrix A and zeros for B, so training starts with
+        pretrained weights.
+
+    Arguments:
+        linear: original layer to wrap with adapter for finetuning
+        r: rank of the lower-rank matrices A and B (# of cols in A, # of rows in B)
+        alpha: scaling factor (usually set to r or 2 * r, latter in this case)
+        dropout: dropout prob applied to input before A
+    """
     def __init__(self,linear:nn.Linear,r:int,alpha:float,dropout:float):
         super().__init__()
 
-        self.linear = linear
+        self.linear = linear # original frozen weights
         self.r = r
         self.scaling = alpha / r
 
         in_feats = linear.in_features
         out_feats = linear.out_features
 
+        # Lower rank matrices A and B
         self.lora_A = nn.Linear(in_feats,r,bias=False)
         self.lora_B = nn.Linear(r,out_feats,bias=False)
 
         self.dropout = nn.Dropout(p=dropout)
 
+        # Initializing A to be distributed as a Gaussian with 0 mean, standard deviation of 0.02
         nn.init.normal_(self.lora_A.weight,std=0.02)
+        # Initialize B to be just zeros
         nn.init.zeros_(self.lora_B.weight)
 
+        # Freeze the original weights
         for param in self.linear.parameters():
             param.requires_grad = False
 
@@ -47,11 +69,30 @@ class LoRALinear(nn.Module):
 
 
 def lora_to_visual_enc(clip_model:CLIPModel,r:int = config.LORA_R, alpha:int = config.LORA_ALPHA, dropout: float = config.LORA_DROPOUT, target_modules: list = config.LORA_TARGET_MODULES) -> CLIPModel:
+    """
+    Traverse through CLIP visual encoder, replace each linear layer whose name ends with
+    with one of the target_modules strings with LoRALinear wrapper
+
+    Only LoRA adapater params (lora_A and lora_B) will have gradients calculated/updated after call to this function.
+    Everything else stays frozen
+
+    Arguments:
+        clip_model: full CLIPModel (visual and text)
+        r: LoRA rank
+        alpha: LoRA scaling factor
+        dropout: dropout on LoRA input
+        target_modules: list of Linear layer name suffixes to adapt
+
+    Returns:
+        clip_model with LoRA applied in-place to visual encoder
+    """
     visual_encoder = clip_model.vision_model
 
     for name,module in visual_encoder.named_modules():
+        # Checking if module's short name matches target
         short_name = name.split(".")[-1]
         if short_name in target_modules and isinstance(module,nn.Linear):
+            # Navigate to parent, replace child
             parts = name.split(".")
             parent = visual_encoder
             for part in parts[:-1]:
@@ -68,6 +109,18 @@ def lora_to_visual_enc(clip_model:CLIPModel,r:int = config.LORA_R, alpha:int = c
     return clip_model
 
 class FusionMLP(nn.Module):
+    """
+    A two layer multilayer perceptron that maps concatenated image and text featues to class logits
+
+    Architecture:
+        [image_feat and text_feat] -> Linear -> ReLU -> Dropout -> Linear -> logits
+
+    Arguments:
+        input_dim: dimension of concatenated feature vector
+        hidden_dim: size of hidden layer
+        num_classes: number of output classes (vocab_size + 1 for UNK)
+        dropout: dropout prob before output layer
+    """
     def __init__(self,input_dim:int,hidden_dim:int,num_classes:int,dropout:float):
         super().__init__()
 
@@ -78,33 +131,62 @@ class FusionMLP(nn.Module):
     
 
 class ChartQAModel(nn.Module):
+    """
+    Full ChartQA model: CLIP encoders and MLP fusion head
+
+    Supports two training modes controlled by 'use_lora':
+        - use_lora=False: frozen CLIP (only MLP head is trained)
+        - use_lora=True: LoRA adapters on visual encoder + MLP head trained
+
+    Text encoder is always frozen no matter what
+
+    Arguments:
+        num_classes: number of answer classes (vocab_size + 1)
+        use_lora: whether to apply LoRA to the visual encoder
+        clip_model_name: HF model ID for CLIP backbone
+    """
     def __init__(self,num_classes:int,use_lora:bool=False,clip_model_name:str = config.CLIP_NAME):
         super().__init__()
         self.use_lora = use_lora
 
+        # Load CLIP
         print(f"[Model] Loading CLIP: {clip_model_name}")
         clip = CLIPModel.from_pretrained(clip_model_name)
 
+        # Freeze everything first
         for param in clip.parameters():
             param.requires_grad = False
 
+        # Optionally apply LoRA to visual encoder
         if use_lora:
             clip = lora_to_visual_enc(clip)
 
+        # Attach encoder (could potentially be LoRA-adapted)
         self.visual_encoder = clip.vision_model
-        self.visual_proj = clip.visual_projection
+        self.visual_proj = clip.visual_projection # projects to embed_dim
         self.text_encoder = clip.text_model
-        self.text_proj = clip.text_projection
+        self.text_proj = clip.text_projection # projects to embed_dim
 
-        input_dim = config.CLIP_EMBED_DIM * 2
+        # MLP fusion head (always trained)
+        input_dim = config.CLIP_EMBED_DIM * 2  # concatenation of image, text features
         self.fusion = FusionMLP(input_dim=input_dim,hidden_dim = config.MLP_HIDDEN_DIM,num_classes=num_classes, dropout = config.MLP_DROPOUT)
 
         self._report_params()
         
     def encode_img(self,pixel_values:torch.Tensor) -> torch.Tensor:
+        """
+        Extract and normalize visual features
+
+        Arguments:
+            pixel_values: FloatTensor [B,3,H,W]
+
+        Returns:
+            FloatTensor [B,embed_dim]
+        """
         outputs = self.visual_encoder(pixel_values=pixel_values)
+        # Pooler output is CLS token representation [B,hidden_dim]
         pooled = outputs.pooler_outuput
-        feat = self.visual_proj(pooled)
+        feat = self.visual_proj(pooled) # [B,embed_dim]
         return nn.functional.normalize(feat,dim=-1)
     
     def encode_text(self,input_ids:torch.Tensor,attention_mask:torch.Tensor) -> torch.Tensor:
