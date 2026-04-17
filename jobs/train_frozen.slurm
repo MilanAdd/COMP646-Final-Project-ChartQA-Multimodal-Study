@@ -1,13 +1,13 @@
 #!/bin/bash
 #SBATCH --job-name=chartqa-frozen
-#SBATCH --partition=scavenge
+#SBATCH --partition=commons
 #SBATCH --account=commons
 #SBATCH --ntasks=1
 #SBATCH --threads-per-core=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem-per-cpu=16G
 #SBATCH --gres=gpu:1
-#SBATCH --time=04:00:00
+#SBATCH --time=12:00:00
 #SBATCH --output=__WORK__/chartqa_project/logs/train_frozen_%j.out
 #SBATCH --error=__WORK__/chartqa_project/logs/train_frozen_%j.err
 
