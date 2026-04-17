@@ -40,8 +40,8 @@ HF_DATASET_NAME = "ahmed-masry/ChartQA"
 
 # Amount of most frequent training answers to keep in vocabulary
 # Answers outside vocab are labeled as UNK (unknown words outside vocab), not included in accuracy
-# Starting with 100 for now as it should cover around two thirds of training answers
-VOCAB_SIZE = 100
+# Starting with 1000 for now as it should cover around a good amount of training answers
+VOCAB_SIZE = 1000
 
 # Derived from ChartQA paper, the relaxed accuracy tolerance for numerical answers specifically
 # Allows minor inaccuracy that could result from automatic data extraction

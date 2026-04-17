@@ -277,7 +277,11 @@ class ChartQADataset(Dataset):
 
         # image
         image = sample["image"]
-        if image.mode != "RGB":
+        if isinstance(image,bytes):
+            import io
+            image = Image.open(io.BytesIO(image)).convert("RGB")
+        
+        elif image.mode != "RGB":
             image = image.convert("RGB")
         image = self.transform(image)
 
