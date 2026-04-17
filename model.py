@@ -185,7 +185,7 @@ class ChartQAModel(nn.Module):
         """
         outputs = self.visual_encoder(pixel_values=pixel_values)
         # Pooler output is CLS token representation [B,hidden_dim]
-        pooled = outputs.pooler_outuput
+        pooled = outputs.pooler_output
         feat = self.visual_proj(pooled) # [B,embed_dim]
         return nn.functional.normalize(feat,dim=-1)
     
