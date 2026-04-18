@@ -17,19 +17,9 @@ nvidia-smi
 module purge
 
 # ---------------------------------------------------------------------------
-# Use full paths to venv binaries — avoids activation issues on compute nodes
+# Use venv pre-built on login node — do NOT recreate on compute node
 # ---------------------------------------------------------------------------
-VENV=__WORK__/venvs/chartqa
-PYTHON=$VENV/bin/python
-PIP=$VENV/bin/pip
-
-# Create venv if it doesn't exist
-if [ ! -f "$PYTHON" ]; then
-    echo "Creating virtual environment ..."
-    python3 -m venv "$VENV"
-    $PIP install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cu124
-    $PIP install --no-cache-dir transformers datasets accelerate Pillow
-fi
+PYTHON=__WORK__/venvs/chartqa/bin/python
 
 echo "Python:    $($PYTHON --version)"
 echo "PyTorch:   $($PYTHON -c 'import torch; print(torch.__version__)')"

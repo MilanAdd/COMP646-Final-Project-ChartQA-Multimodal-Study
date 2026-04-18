@@ -16,19 +16,7 @@ nvidia-smi
 
 module purge
 
-VENV=__WORK__/venvs/chartqa
-PYTHON=$VENV/bin/python
-PIP=$VENV/bin/pip
-
-if [ ! -f "$PYTHON" ]; then
-    echo "Creating virtual environment ..."
-    python3 -m venv "$VENV"
-    $PIP install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cu124
-    $PIP install --no-cache-dir transformers datasets accelerate Pillow qwen-vl-utils
-fi
-
-# Ensure qwen-vl-utils is installed
-$PIP install --no-cache-dir --quiet qwen-vl-utils
+PYTHON=__WORK__/venvs/chartqa/bin/python
 
 echo "Python:       $($PYTHON --version)"
 echo "PyTorch:      $($PYTHON -c 'import torch; print(torch.__version__)')"
