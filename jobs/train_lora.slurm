@@ -18,7 +18,7 @@ module purge
 
 SHARED_SCRATCH=/scratch
 
-PYTHON=__WORK__/venvs/chartqa/bin/python
+PYTHON=/scratch/ma200/venvs/chartqa/bin/python
 
 echo "Python:    $($PYTHON --version)"
 echo "PyTorch:   $($PYTHON -c 'import torch; print(torch.__version__)')"
