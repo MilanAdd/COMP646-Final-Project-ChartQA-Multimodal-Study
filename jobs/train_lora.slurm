@@ -8,8 +8,8 @@
 #SBATCH --mem-per-cpu=16G
 #SBATCH --gres=gpu:1
 #SBATCH --time=12:00:00
-#SBATCH --output=__WORK__/chartqa_project/logs/train_lora_%j.out
-#SBATCH --error=__WORK__/chartqa_project/logs/train_lora_%j.err
+#SBATCH --output=/home/__NETID__/chartqa_project/logs/train_lora_%j.out
+#SBATCH --error=/home/__NETID__/chartqa_project/logs/train_lora_%j.err
 
 echo "Job started on $(hostname) at $(date)"
 echo "GPU info:"
@@ -17,15 +17,12 @@ nvidia-smi
 
 module purge
 
-# ---------------------------------------------------------------------------
-# Virtual environment
-# ---------------------------------------------------------------------------
 VENV_DIR=__WORK__/venvs/chartqa
 if [ ! -d "$VENV_DIR" ]; then
     echo "Creating virtual environment ..."
     python3 -m venv "$VENV_DIR"
     source "$VENV_DIR/bin/activate"
-    pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cu121
+    pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cu124
     pip install --no-cache-dir transformers datasets accelerate Pillow
 else
     source "$VENV_DIR/bin/activate"
@@ -35,16 +32,9 @@ echo "Python:    $(which python)"
 echo "PyTorch:   $(python -c 'import torch; print(torch.__version__)')"
 echo "CUDA:      $(python -c 'import torch; print(torch.cuda.is_available())')"
 
-# ---------------------------------------------------------------------------
-# HuggingFace cache
-# ---------------------------------------------------------------------------
 export HF_HOME=__WORK__/hf_cache
 export HF_DATASETS_CACHE=__WORK__/hf_cache/datasets
-mkdir -p "$HF_HOME"
 
-# ---------------------------------------------------------------------------
-# Stage data to SHARED_SCRATCH
-# ---------------------------------------------------------------------------
 echo "Staging data to SHARED_SCRATCH ..."
 SCRATCH_DATA=$SHARED_SCRATCH/chartqa_data
 mkdir -p "$SCRATCH_DATA"
@@ -56,19 +46,14 @@ else
     echo "Data already on scratch, skipping copy."
 fi
 
-# ---------------------------------------------------------------------------
-# Run training — LoRA CLIP visual encoder + MLP head
-# LoRA adds trainable parameters so this job needs slightly more time
-# than frozen CLIP.
-# ---------------------------------------------------------------------------
-PROJECT_DIR=__WORK__/chartqa_project
+SCRATCH_OUTPUT=$SHARED_SCRATCH/chartqa_output
+mkdir -p "$SCRATCH_OUTPUT/checkpoints" "$SCRATCH_OUTPUT/results"
+
+PROJECT_DIR=/home/__NETID__/chartqa_project
 cd "$PROJECT_DIR"
 
-export WORK=$SCRATCH_DATA
-
-mkdir -p "$PROJECT_DIR/logs"
-mkdir -p "$PROJECT_DIR/checkpoints"
-mkdir -p "$PROJECT_DIR/results"
+export CHARTQA_DATA_DIR=$SCRATCH_DATA
+export CHARTQA_OUTPUT_DIR=$SCRATCH_OUTPUT
 
 srun python train.py \
     --mode lora \
@@ -77,11 +62,10 @@ srun python train.py \
     --batch-size 64 \
     --workers 4
 
-# ---------------------------------------------------------------------------
-# Copy results back to $WORK
-# ---------------------------------------------------------------------------
 echo "Copying results back to WORK ..."
-cp -r "$PROJECT_DIR/checkpoints/" __WORK__/chartqa_project/
-cp -r "$PROJECT_DIR/results/"     __WORK__/chartqa_project/
+mkdir -p __WORK__/chartqa_project/checkpoints
+mkdir -p __WORK__/chartqa_project/results
+cp -r "$SCRATCH_OUTPUT/checkpoints/" __WORK__/chartqa_project/
+cp -r "$SCRATCH_OUTPUT/results/"     __WORK__/chartqa_project/
 
 echo "Job finished at $(date)"
