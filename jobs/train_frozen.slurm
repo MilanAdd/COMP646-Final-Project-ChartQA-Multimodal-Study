@@ -16,6 +16,8 @@ nvidia-smi
 
 module purge
 
+SHARED_SCRATCH=/scratch
+
 # ---------------------------------------------------------------------------
 # Use venv pre-built on login node — do NOT recreate on compute node
 # ---------------------------------------------------------------------------

@@ -16,6 +16,8 @@ nvidia-smi
 
 module purge
 
+SHARED_SCRATCH=/scratch
+
 PYTHON=__WORK__/venvs/chartqa/bin/python
 
 echo "Python:    $($PYTHON --version)"
