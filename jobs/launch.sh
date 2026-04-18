@@ -38,9 +38,10 @@ rsync -avz --exclude="*.pyc" \
     "$(dirname "$0")/../" "$REMOTE:$REMOTE_DIR/"
 
 echo "Uploading SLURM script ..."
-# Replace __WORK__ and __NETID__ placeholders
-sed "s|__WORK__|$WORK|g; s|__NETID__|$NETID|g" "$SLURM_FILE" \
-    | ssh $REMOTE "cat > $REMOTE_DIR/jobs/${JOB_NAME}.slurm"
+TMPFILE=$(mktemp)
+sed "s|__WORK__|$WORK|g; s|__NETID__|$NETID|g" "$SLURM_FILE" > "$TMPFILE"
+scp "$TMPFILE" "$REMOTE:$REMOTE_DIR/jobs/${JOB_NAME}.slurm"
+rm "$TMPFILE"
 
 echo "Submitting $JOB_NAME ..."
 JOB_ID=$(ssh $REMOTE "cd $REMOTE_DIR && sbatch --parsable jobs/${JOB_NAME}.slurm")

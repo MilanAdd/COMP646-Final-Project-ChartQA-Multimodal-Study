@@ -36,7 +36,7 @@ export HF_HOME=__WORK__/hf_cache
 export HF_DATASETS_CACHE=__WORK__/hf_cache/datasets
 
 echo "Staging data to SHARED_SCRATCH ..."
-SCRATCH_DATA=$SHARED_SCRATCH/chartqa_data
+SCRATCH_DATA=$SHARED_SCRATCH/ma200/chartqa_data
 mkdir -p "$SCRATCH_DATA"
 
 if [ ! -d "$SCRATCH_DATA/datasets" ]; then
@@ -46,7 +46,7 @@ else
     echo "Data already on scratch, skipping copy."
 fi
 
-SCRATCH_OUTPUT=$SHARED_SCRATCH/chartqa_output
+SCRATCH_OUTPUT=$SHARED_SCRATCH/ma200/chartqa_output
 mkdir -p "$SCRATCH_OUTPUT/checkpoints" "$SCRATCH_OUTPUT/results"
 
 PROJECT_DIR=/home/__NETID__/chartqa_project
