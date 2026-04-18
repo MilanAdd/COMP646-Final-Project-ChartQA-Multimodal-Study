@@ -12,27 +12,28 @@
 #SBATCH --error=/home/__NETID__/chartqa_project/logs/eval_zeroshot_%j.err
 
 echo "Job started on $(hostname) at $(date)"
-echo "GPU info:"
 nvidia-smi
 
 module purge
 
-VENV_DIR=__WORK__/venvs/chartqa
-if [ ! -d "$VENV_DIR" ]; then
+VENV=__WORK__/venvs/chartqa
+PYTHON=$VENV/bin/python
+PIP=$VENV/bin/pip
+
+if [ ! -f "$PYTHON" ]; then
     echo "Creating virtual environment ..."
-    python3 -m venv "$VENV_DIR"
-    source "$VENV_DIR/bin/activate"
-    pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cu124
-    pip install --no-cache-dir transformers datasets accelerate Pillow qwen-vl-utils
-else
-    source "$VENV_DIR/bin/activate"
-    pip install --no-cache-dir --quiet qwen-vl-utils
+    python3 -m venv "$VENV"
+    $PIP install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cu124
+    $PIP install --no-cache-dir transformers datasets accelerate Pillow qwen-vl-utils
 fi
 
-echo "Python:       $(which python)"
-echo "PyTorch:      $(python -c 'import torch; print(torch.__version__)')"
-echo "CUDA:         $(python -c 'import torch; print(torch.cuda.is_available())')"
-echo "transformers: $(python -c 'import transformers; print(transformers.__version__)')"
+# Ensure qwen-vl-utils is installed
+$PIP install --no-cache-dir --quiet qwen-vl-utils
+
+echo "Python:       $($PYTHON --version)"
+echo "PyTorch:      $($PYTHON -c 'import torch; print(torch.__version__)')"
+echo "CUDA:         $($PYTHON -c 'import torch; print(torch.cuda.is_available())')"
+echo "transformers: $($PYTHON -c 'import transformers; print(transformers.__version__)')"
 
 export HF_HOME=__WORK__/hf_cache
 export HF_DATASETS_CACHE=__WORK__/hf_cache/datasets
@@ -57,7 +58,7 @@ cd "$PROJECT_DIR"
 export CHARTQA_DATA_DIR=$SCRATCH_DATA
 export CHARTQA_OUTPUT_DIR=$SCRATCH_OUTPUT
 
-srun python zero_shot.py \
+srun $PYTHON zero_shot.py \
     --split test \
     --batch-size 1 \
     --max-new-tokens 20

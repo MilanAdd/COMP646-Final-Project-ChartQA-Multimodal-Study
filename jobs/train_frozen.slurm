@@ -12,37 +12,37 @@
 #SBATCH --error=/home/__NETID__/chartqa_project/logs/train_frozen_%j.err
 
 echo "Job started on $(hostname) at $(date)"
-echo "GPU info:"
 nvidia-smi
 
 module purge
 
 # ---------------------------------------------------------------------------
-# Virtual environment — stored in $WORK (too large for $HOME quota)
+# Use full paths to venv binaries — avoids activation issues on compute nodes
 # ---------------------------------------------------------------------------
-VENV_DIR=__WORK__/venvs/chartqa
-if [ ! -d "$VENV_DIR" ]; then
+VENV=__WORK__/venvs/chartqa
+PYTHON=$VENV/bin/python
+PIP=$VENV/bin/pip
+
+# Create venv if it doesn't exist
+if [ ! -f "$PYTHON" ]; then
     echo "Creating virtual environment ..."
-    python3 -m venv "$VENV_DIR"
-    source "$VENV_DIR/bin/activate"
-    pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cu124
-    pip install --no-cache-dir transformers datasets accelerate Pillow
-else
-    source "$VENV_DIR/bin/activate"
+    python3 -m venv "$VENV"
+    $PIP install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cu124
+    $PIP install --no-cache-dir transformers datasets accelerate Pillow
 fi
 
-echo "Python:    $(which python)"
-echo "PyTorch:   $(python -c 'import torch; print(torch.__version__)')"
-echo "CUDA:      $(python -c 'import torch; print(torch.cuda.is_available())')"
+echo "Python:    $($PYTHON --version)"
+echo "PyTorch:   $($PYTHON -c 'import torch; print(torch.__version__)')"
+echo "CUDA:      $($PYTHON -c 'import torch; print(torch.cuda.is_available())')"
 
 # ---------------------------------------------------------------------------
-# HuggingFace cache — keep in $WORK so model weights persist across jobs
+# HuggingFace cache
 # ---------------------------------------------------------------------------
 export HF_HOME=__WORK__/hf_cache
 export HF_DATASETS_CACHE=__WORK__/hf_cache/datasets
 
 # ---------------------------------------------------------------------------
-# Stage ChartQA data from $WORK to $SHARED_SCRATCH for fast job I/O
+# Stage data from $WORK to $SHARED_SCRATCH
 # ---------------------------------------------------------------------------
 echo "Staging data to SHARED_SCRATCH ..."
 SCRATCH_DATA=$SHARED_SCRATCH/ma200/chartqa_data
@@ -52,7 +52,7 @@ if [ ! -d "$SCRATCH_DATA/datasets" ]; then
     cp -r __WORK__/chartqa_data/ "$SCRATCH_DATA/"
     echo "Data staged."
 else
-    echo "Data already on scratch, skipping copy."
+    echo "Data already on scratch."
 fi
 
 SCRATCH_OUTPUT=$SHARED_SCRATCH/ma200/chartqa_output
@@ -67,7 +67,7 @@ cd "$PROJECT_DIR"
 export CHARTQA_DATA_DIR=$SCRATCH_DATA
 export CHARTQA_OUTPUT_DIR=$SCRATCH_OUTPUT
 
-srun python train.py \
+srun $PYTHON train.py \
     --mode frozen \
     --epochs 20 \
     --lr 3e-4 \
@@ -75,7 +75,7 @@ srun python train.py \
     --workers 4
 
 # ---------------------------------------------------------------------------
-# Copy results back to $WORK for persistence
+# Copy results back to $WORK
 # ---------------------------------------------------------------------------
 echo "Copying results back to WORK ..."
 mkdir -p __WORK__/chartqa_project/checkpoints
