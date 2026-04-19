@@ -20,7 +20,7 @@ def parse_args():
     parser.add_argument("--mode",type=str,choices=["frozen","lora"],default="frozen",help="frozen: train only MLP head | lora: train LoRA adapters in addition to MLP")
     parser.add_argument("--epochs",type=int,default=config.NUM_EPOCHS)
     parser.add_argument("--lr",type=float,default=config.LEARNING_RATE)
-    parser.add_argument("--batch-size",type=int,defaut=config.BATCH_SIZE)
+    parser.add_argument("--batch-size",type=int,default=config.BATCH_SIZE)
     parser.add_argument("--workers",type=int,default=config.NUM_WORKERS)
     parser.add_argument("--resume",type=str,default=None,help="Path to checkpoint to resume training from")
 
