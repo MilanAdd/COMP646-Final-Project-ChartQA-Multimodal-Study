@@ -136,7 +136,7 @@ def main():
     for epoch in range(start_epoch,args.epochs+1):
         start_time = time.time()
 
-        train_loss,train_acc = train_epoch(model,train_loader,optim,criterion,tokenizer,device,epoch,args.epoch)
+        train_loss,train_acc = train_epoch(model,train_loader,optim,criterion,tokenizer,device,epoch,args.epochs)
 
         val_loss,val_acc = eval(model,val_loader,criterion,tokenizer,device)
 
