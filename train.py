@@ -116,7 +116,7 @@ def main():
     model = ChartQAModel(num_classes=num_classes,use_lora=use_lora).to(device)
     trainable_params = [p for p in model.parameters() if p.requires_grad]
     optim = AdamW(trainable_params,lr=args.lr,weight_decay=config.WEIGHT_DECAY)
-    scheduler = CosineAnnealingLR(optim,T_max=args.epoch,eta_min=1e-6)
+    scheduler = CosineAnnealingLR(optim,T_max=args.epochs,eta_min=1e-6)
 
     criterion = nn.CrossEntropyLoss()
 
