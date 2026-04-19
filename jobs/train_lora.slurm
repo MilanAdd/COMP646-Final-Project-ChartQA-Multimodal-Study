@@ -16,36 +16,22 @@ nvidia-smi
 
 module purge
 
-SHARED_SCRATCH=/scratch
-
 PYTHON=/scratch/ma200/venvs/chartqa/bin/python
 
 echo "Python:    $($PYTHON --version)"
 echo "PyTorch:   $($PYTHON -c 'import torch; print(torch.__version__)')"
 echo "CUDA:      $($PYTHON -c 'import torch; print(torch.cuda.is_available())')"
 
-export HF_HOME=__WORK__/hf_cache
-export HF_DATASETS_CACHE=__WORK__/hf_cache/datasets
+export HF_HOME=/scratch/ma200/hf_cache
+export HF_DATASETS_CACHE=/scratch/ma200/hf_cache/datasets
 
-echo "Staging data to SHARED_SCRATCH ..."
-SCRATCH_DATA=$SHARED_SCRATCH/ma200/chartqa_data
-mkdir -p "$SCRATCH_DATA"
+export CHARTQA_DATA_DIR=/scratch/ma200/chartqa_data
+export CHARTQA_OUTPUT_DIR=/scratch/ma200/chartqa_output
 
-if [ ! -d "$SCRATCH_DATA/datasets" ]; then
-    cp -r __WORK__/chartqa_data/ "$SCRATCH_DATA/"
-    echo "Data staged."
-else
-    echo "Data already on scratch."
-fi
+mkdir -p /scratch/ma200/chartqa_output/checkpoints
+mkdir -p /scratch/ma200/chartqa_output/results
 
-SCRATCH_OUTPUT=$SHARED_SCRATCH/ma200/chartqa_output
-mkdir -p "$SCRATCH_OUTPUT/checkpoints" "$SCRATCH_OUTPUT/results"
-
-PROJECT_DIR=/home/__NETID__/chartqa_project
-cd "$PROJECT_DIR"
-
-export CHARTQA_DATA_DIR=$SCRATCH_DATA
-export CHARTQA_OUTPUT_DIR=$SCRATCH_OUTPUT
+cd /home/__NETID__/chartqa_project
 
 srun $PYTHON train.py \
     --mode lora \
@@ -55,9 +41,9 @@ srun $PYTHON train.py \
     --workers 4
 
 echo "Copying results back to WORK ..."
-mkdir -p __WORK__/chartqa_project/checkpoints
-mkdir -p __WORK__/chartqa_project/results
-cp -r "$SCRATCH_OUTPUT/checkpoints/" __WORK__/chartqa_project/
-cp -r "$SCRATCH_OUTPUT/results/"     __WORK__/chartqa_project/
+mkdir -p /storage/hpc/work/comp646/ma200/chartqa_project/checkpoints
+mkdir -p /storage/hpc/work/comp646/ma200/chartqa_project/results
+cp -r /scratch/ma200/chartqa_output/checkpoints/ /storage/hpc/work/comp646/ma200/chartqa_project/
+cp -r /scratch/ma200/chartqa_output/results/     /storage/hpc/work/comp646/ma200/chartqa_project/
 
 echo "Job finished at $(date)"

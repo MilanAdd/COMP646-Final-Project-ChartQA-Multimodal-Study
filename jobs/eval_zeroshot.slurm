@@ -16,8 +16,6 @@ nvidia-smi
 
 module purge
 
-SHARED_SCRATCH=/scratch
-
 PYTHON=/scratch/ma200/venvs/chartqa/bin/python
 
 echo "Python:       $($PYTHON --version)"
@@ -25,28 +23,15 @@ echo "PyTorch:      $($PYTHON -c 'import torch; print(torch.__version__)')"
 echo "CUDA:         $($PYTHON -c 'import torch; print(torch.cuda.is_available())')"
 echo "transformers: $($PYTHON -c 'import transformers; print(transformers.__version__)')"
 
-export HF_HOME=__WORK__/hf_cache
-export HF_DATASETS_CACHE=__WORK__/hf_cache/datasets
+export HF_HOME=/scratch/ma200/hf_cache
+export HF_DATASETS_CACHE=/scratch/ma200/hf_cache/datasets
 
-echo "Staging dataset to SHARED_SCRATCH ..."
-SCRATCH_DATA=$SHARED_SCRATCH/ma200/chartqa_data
-mkdir -p "$SCRATCH_DATA"
+export CHARTQA_DATA_DIR=/scratch/ma200/chartqa_data
+export CHARTQA_OUTPUT_DIR=/scratch/ma200/chartqa_output
 
-if [ ! -d "$SCRATCH_DATA/datasets" ]; then
-    cp -r __WORK__/chartqa_data/ "$SCRATCH_DATA/"
-    echo "Dataset staged."
-else
-    echo "Dataset already on scratch."
-fi
+mkdir -p /scratch/ma200/chartqa_output/results
 
-SCRATCH_OUTPUT=$SHARED_SCRATCH/ma200/chartqa_output
-mkdir -p "$SCRATCH_OUTPUT/results"
-
-PROJECT_DIR=/home/__NETID__/chartqa_project
-cd "$PROJECT_DIR"
-
-export CHARTQA_DATA_DIR=$SCRATCH_DATA
-export CHARTQA_OUTPUT_DIR=$SCRATCH_OUTPUT
+cd /home/__NETID__/chartqa_project
 
 srun $PYTHON zero_shot.py \
     --split test \
@@ -54,7 +39,7 @@ srun $PYTHON zero_shot.py \
     --max-new-tokens 20
 
 echo "Copying results back to WORK ..."
-mkdir -p __WORK__/chartqa_project/results
-cp -r "$SCRATCH_OUTPUT/results/" __WORK__/chartqa_project/
+mkdir -p /storage/hpc/work/comp646/ma200/chartqa_project/results
+cp -r /scratch/ma200/chartqa_output/results/ /storage/hpc/work/comp646/ma200/chartqa_project/
 
 echo "Job finished at $(date)"
