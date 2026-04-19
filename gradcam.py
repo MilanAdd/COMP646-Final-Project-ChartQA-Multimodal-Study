@@ -90,14 +90,14 @@ class GradCAM:
         self._backward_hook.remove()
 
 
-def overlay_heatmap(image:Image.Image,heatmap:np.darray,alpha:float=0.5,colormap:str="jet")-> np.ndarray:
+def overlay_heatmap(image:Image.Image,heatmap:np.ndarray,alpha:float=0.5,colormap:str="jet")-> np.ndarray:
     img_resized = image.resize((config.IMAGE_SIZE,config.IMAGE_SIZE),Image.LANCZOS)
     img_array = np.array(img_resized).astype(np.float32)/255.0
 
     cmap = cm.get_cmap(colormap)
     heat_rgb = cmap(heatmap)[:,:,:3]
 
-    blended = (1-alpha)*img_array + alpha* heatmap
+    blended = (1-alpha)*img_array + alpha* heat_rgb
     blended = np.clip(blended,0,1)
     return (blended*255).astype(np.uint8)
 
@@ -105,6 +105,7 @@ def make_gradcam_figure(examples:list,model:ChartQAModel,gradcam:GradCAM,tokeniz
     n = len(examples)
     if n ==  0:
         print(f"[GradCAM] No examples to plot for: {title}")
+        return
     
     fig,axes = plt.subplots(n,2,figsize=(10,4*n))
     if n==1:
@@ -136,7 +137,7 @@ def make_gradcam_figure(examples:list,model:ChartQAModel,gradcam:GradCAM,tokeniz
         ax_img = axes[row_idx][0]
         ax_heat = axes[row_idx][1]
 
-        ax_img.imshow(pil_img.resize(config.IMAGE_SIZE,config.IMAGE_SIZE),Image.LANCZOS)
+        ax_img.imshow(pil_img.resize((config.IMAGE_SIZE,config.IMAGE_SIZE)),Image.LANCZOS)
         ax_img.axis("off")
 
         ax_heat.imshow(overlay)
@@ -194,9 +195,9 @@ def main():
 
     common_kwargs = dict(model=model,gradcam=gradcam,tokenizer=tokenizer,device=device,idx2answer=idx2answer,alpha=args.alpha)
 
-    make_gradcam_figure(examples=correct_ex,title=f"GradCAM (Correct examples) ({args.mode})",save_path=os.path.join(config.FIGURES_DIR,f"gradcam_{args.mode}_correct.pdf"))
+    make_gradcam_figure(**common_kwargs,examples=correct_ex,title=f"GradCAM (Correct examples) ({args.mode})",save_path=os.path.join(config.FIGURES_DIR,f"gradcam_{args.mode}_correct.pdf"))
 
-    make_gradcam_figure(examples=incorrect_ex,title=f"GradCAM (Incorrect predictions) ({args.mode})",save_path=os.path.join(config.FIGURES_DIR,f"gradcam_{args.mode}_incorrect.pdf"))
+    make_gradcam_figure(**common_kwargs,examples=incorrect_ex,title=f"GradCAM (Incorrect predictions) ({args.mode})",save_path=os.path.join(config.FIGURES_DIR,f"gradcam_{args.mode}_incorrect.pdf"))
     gradcam.remove_hooks()
     print("[GradCAM] Done")
 
