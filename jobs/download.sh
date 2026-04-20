@@ -11,8 +11,8 @@ mkdir -p "$LOCAL_OUTPUT/results" "$LOCAL_OUTPUT/figures"
 
 echo "Downloading results and figures from NOTS ..."
 
-scp -r "$REMOTE:$REMOTE_DIR/results/" "$LOCAL_OUTPUT/"
-scp -r "$REMOTE:$REMOTE_DIR/figures/" "$LOCAL_OUTPUT/"
+scp -r "$REMOTE:/storage/hpc/work/comp646/ma200/chartqa_project/results/" "$LOCAL_OUTPUT/"
+scp -r "$REMOTE:/storage/hpc/work/comp646/ma200/chartqa_project/checkpoints/" "$LOCAL_OUTPUT/"
 
 if [ "$1" = "--all" ]; then
     echo "Downloading checkpoints (this may take a while) ..."

@@ -166,7 +166,12 @@ def _load_img_for_example(example:dict):
         for split in ("test","val","train"):
             for sample in hf_data[split]:
                 if sample["query"] == question:
-                    return sample["image"]
+                    img = sample["image"]
+                    if isinstance(img, bytes):
+                        import io
+                        from PIL import Image
+                        return Image.open(io.BytesIO(img)).convert("RGB")
+                    return img
     except Exception as e:
         print(f"[GradCAM] Image load error: {e}")
     return None

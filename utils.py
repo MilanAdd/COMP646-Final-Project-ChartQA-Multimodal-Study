@@ -91,6 +91,7 @@ def plot_accuracy_comparison(split:str="test",save:bool=True) -> None:
     
     if not accs:
         print("[Plot] No eval files found for accuracy comparison")
+        return
     
     fig,ax = plt.subplots(figsize=(7,4))
     colors = [COLORS[m] for m in modes[:len(accs)]]
@@ -204,7 +205,7 @@ def plot_cross_table(mode:str,split:str="test",save:bool=True) -> None:
     ax.set_xlabel("Chart Type")
     ax.set_ylabel("Question Type")
     ax.set_title(f"Accuracy Heatmap ({LABELS[mode]}) - "
-                 f"ChartWA {split.capitalize()} Set")
+                 f"ChartQA {split.capitalize()} Set")
     
     cbar = plt.colorbar(im,ax=ax,fraction=0.046,pad=0.04)
     cbar.set_label("Relaxed Accuracy (%)")
@@ -231,7 +232,7 @@ def print_latex_table(split:str="test") -> None:
         r"  \label{tab:results}" + "\n"
         r"  \begin{tabular}{lccccccc}" + "\n"
         r"  \toprule" + "\n"
-        r"  Model and Overall and Human and Augmented and Bar and Line and Pie \\" + "\n"
+        r"  Model & Overall & Human & Augmented & Bar & Line & Pie \\" + "\n"
         r"  \midrule"
     )
 
