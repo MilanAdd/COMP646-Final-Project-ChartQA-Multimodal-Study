@@ -31,7 +31,7 @@ mkdir -p /scratch/ma200/chartqa_output/results
 
 cd /home/__NETID__/chartqa_project
 
-srun $PYTHON evaluate.py \
+srun $PYTHON eval.py \
     --checkpoint /scratch/ma200/chartqa_output/checkpoints/best_lora.pt \
     --mode lora \
     --split test
