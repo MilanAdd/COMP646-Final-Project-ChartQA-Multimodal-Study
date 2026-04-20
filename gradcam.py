@@ -39,10 +39,16 @@ class GradCAM:
         self._backward_hook = target_layer.register_full_backward_hook(self._save_gradient)
 
     def _save_activation(self,module,input,output):
-        self._activations = output.detach()
+        if isinstance(output,tuple):
+            self._activations = output[0].detach()
+        else:
+            self._activations = output.detach()
 
     def _save_gradient(self,module,grad_input,grad_output):
-        self._gradients = grad_output[0].detach()
+        if isinstance(grad_output[0],tuple):
+            self._gradients = grad_output[0][0].detach()
+        else:
+            self._gradients = grad_output[0].detach()
 
     def generate(self,pixel_values:torch.Tensor,input_ids:torch.Tensor,attention_mask:torch.Tensor,target_class:int=None) -> np.ndarray:
         self.model.eval()

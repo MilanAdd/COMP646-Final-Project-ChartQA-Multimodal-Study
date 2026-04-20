@@ -30,7 +30,7 @@ export CHARTQA_OUTPUT_DIR=/scratch/ma200/chartqa_output
 mkdir -p /scratch/ma200/chartqa_output/figures
 
 echo "Installing matplotlib..."
-/scratch/ma200/venvs/chartqa/bin/pip install --quiet matplotlib
+$PYTHON -m pip install --quiet matplotlib
 
 # ---------------------------------------------------------------------------
 # GradCAM for frozen CLIP
