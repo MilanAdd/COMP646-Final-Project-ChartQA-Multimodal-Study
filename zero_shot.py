@@ -70,6 +70,11 @@ def main():
 
     for idx,sample in enumerate(split):
         img = sample["image"]
+        if isinstance(image, bytes):
+            import io
+            image = Image.open(io.BytesIO(image)).convert("RGB")
+        elif hasattr(image, 'mode') and image.mode != "RGB":
+            image = image.convert("RGB")
         question = sample["query"]
         gold_ans = normalize_answer(sample["label"])
         question_type = sample.get("type","unknown")
