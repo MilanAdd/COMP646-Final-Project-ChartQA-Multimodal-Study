@@ -105,7 +105,7 @@ def normalize_answer(answer:str) -> str:
     """
     answer = answer.strip().lower()
     answer = re.sub(r"[?!;,.]+$","",answer) # trailing punctuation
-    answer = re.sub(r"\s+","",answer) # remove unnecessary whitespace
+    answer = re.sub(r"\s+"," ",answer) # remove unnecessary whitespace
     return answer
 
 def is_numeric(s:str) -> bool:
