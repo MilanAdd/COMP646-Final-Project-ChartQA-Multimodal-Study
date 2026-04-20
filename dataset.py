@@ -182,8 +182,10 @@ def build_chart_type_lookup(annotations_dir:str,save_path:str=CHART_TYPE_LOOKUP_
             try:
                 with open(fpath) as f:
                     ann = json.load(f)
-                raw_type = ann.get("type","unknown")
-                chart_type = _TYPE_MAP.get(raw_type,"unknown")
+                if isinstance(ann, list):
+                    ann = ann[0] if ann else {}
+                raw_type = ann.get("type", "unknown")
+                chart_type = _TYPE_MAP.get(raw_type, "unknown")
             except (json.JSONDecodeError,OSError):
                 chart_type = "unknown"
                 missing_type += 1
