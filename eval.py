@@ -42,7 +42,7 @@ def run_eval(model,loader,tokenizer,device,idx2answer:dict):
             pred_ans = idx2answer.get(pred_idx,"<UNK>")
             gold_ans = gold_answers[idx]
 
-            if gold_ans == "<unk>" or pred_idx==0:
+            if gold_ans == "<unk>":
                 is_correct = False
                 is_unk = True
             else:
