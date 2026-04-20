@@ -100,7 +100,7 @@ def overlay_heatmap(image:Image.Image,heatmap:np.ndarray,alpha:float=0.5,colorma
     img_resized = image.resize((config.IMAGE_SIZE,config.IMAGE_SIZE),Image.LANCZOS)
     img_array = np.array(img_resized).astype(np.float32)/255.0
 
-    cmap = cm.get_cmap(colormap)
+    cmap = plt.colormaps[colormap]
     heat_rgb = cmap(heatmap)[:,:,:3]
 
     blended = (1-alpha)*img_array + alpha* heat_rgb
@@ -143,7 +143,7 @@ def make_gradcam_figure(examples:list,model:ChartQAModel,gradcam:GradCAM,tokeniz
         ax_img = axes[row_idx][0]
         ax_heat = axes[row_idx][1]
 
-        ax_img.imshow(pil_img.resize((config.IMAGE_SIZE,config.IMAGE_SIZE)),Image.LANCZOS)
+        ax_img.imshow(pil_img.resize((config.IMAGE_SIZE,config.IMAGE_SIZE),Image.LANCZOS))
         ax_img.axis("off")
 
         ax_heat.imshow(overlay)
