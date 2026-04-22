@@ -54,6 +54,18 @@ def run_eval(model,loader,tokenizer,device,idx2answer:dict):
     
     return results
 
+BINARY_ANSWERS = {"yes","no"}
+
+def classify_answer_type(answer:str) -> str:
+    a = answer.strip().lower()
+    if a in BINARY_ANSWERS:
+        return "binary"
+    try:
+        float(a.replace(",",""))
+        return "numerical"
+    except ValueError:
+        return "textual"
+
 
 
 def compute_acc(results:list,filter_fn=None) -> dict:
@@ -86,8 +98,13 @@ def compute_breakdowns(results:list) -> dict:
             key = f"{ques}__{ct}"
             by_cross[key] = compute_acc(results,filter_fn=lambda r,q=ques,c=ct:(r["question_type"]==q and r["chart_type"]==c))
 
+    atypes = set(r["answer_type"] for r in results)
+    by_answer_type = {}
+    for at in sorted(atypes):
+        by_answer_type[at] = compute_acc(results,filter_fn=lambda r, a=at:r["answer_type"] == a)
+
     
-    return {"overall":overall,"by_question_type":by_ques_type,"by_chart_type":by_chart_type,"by_cross":by_cross}
+    return {"overall":overall,"by_question_type":by_ques_type,"by_chart_type":by_chart_type,"by_cross":by_cross,"by_answer_type":by_answer_type}
 
 def print_breakdowns(breakdowns:dict,mode:str) -> None:
     """
@@ -105,6 +122,11 @@ def print_breakdowns(breakdowns:dict,mode:str) -> None:
     print("\n --- By Question Type ---")
     for ques,stats in breakdowns["by_question_type"].items():
         print(f"    {ques:15s}: {stats['accuracy']:.4f}"
+              f"({stats['correct']}/{stats['total']})")
+
+    print("\n --- By Chart Type ---")
+    for ct,stats in breakdowns["by_chart_type"].items():
+        print(f"    {ct:15s}: {stats['accuracy']:.4f} "
               f"({stats['correct']}/{stats['total']})")
     
     print("\n --- Cross Breakdown (Question Type x Chart Type) --- ")
