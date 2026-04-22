@@ -65,8 +65,7 @@ MLP_HIDDEN_DIM = 512
 MLP_DROPOUT = 0.3
 
 # Rank - size of trainable low-rank decomposition matrices A, B that are added to original model
-#LORA_R = 8
-LORA_R = 32
+LORA_R = 8
 
 # Alpha - Scaling factor that controls infleunce of adapter weights 
 # Using the heuristic 2 * rank in this case, but could also be same as rank
@@ -77,14 +76,13 @@ LORA_ALPHA = 64
 LORA_DROPOUT = 0.1
 
 # Target modules - the specific modules (linear projection layers within attention blocks) we want to apply the adapter to
-# In this case, we are adapting the query, key, value, and output projection matrices based on the original LoRA paper for reduced memory usage
-LORA_TARGET_MODULES = ["q_proj","k_proj","v_proj","out_proj"]
+# In this case, we are adapting the query and value projection matrices based on the original LoRA paper for reduced memory usage
+LORA_TARGET_MODULES = ["q_proj","v_proj"]
 
 # Training hyperparameters
 BATCH_SIZE = 64
 NUM_EPOCHS = 20
-#LEARNING_RATE = 3e-4
-LEARNING_RATE = 1e-4
+LEARNING_RATE = 3e-4
 WEIGHT_DECAY = 1e-4
 NUM_WORKERS = 4
 
