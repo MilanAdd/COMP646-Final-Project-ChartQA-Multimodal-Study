@@ -6,7 +6,7 @@
 #SBATCH --threads-per-core=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem-per-cpu=16G
-#SBATCH --gres=gpu:a40:1
+#SBATCH --gres=gpu:lovelace:1
 #SBATCH --time=12:00:00
 #SBATCH --output=/home/__NETID__/chartqa_project/logs/train_lora_v2_%j.out
 #SBATCH --error=/home/__NETID__/chartqa_project/logs/train_lora_v2_%j.err
