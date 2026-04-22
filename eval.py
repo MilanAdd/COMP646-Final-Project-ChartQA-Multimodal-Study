@@ -49,7 +49,7 @@ def run_eval(model,loader,tokenizer,device,idx2answer:dict):
                 is_correct = correct_relaxed(pred_ans,gold_ans)
                 is_unk = False
 
-            results.append({"correct":is_correct,"is_unk":is_unk,"pred_answer":pred_ans,"gold_answer":gold_ans,"question":questions[idx],"question_type":question_types[idx],"chart_type":chart_types[idx]})
+            results.append({"correct":is_correct,"is_unk":is_unk,"pred_answer":pred_ans,"gold_answer":gold_ans,"question":questions[idx],"question_type":question_types[idx],"chart_type":chart_types[idx],"answer_type":classify_answer_type(gold_ans)})
 
     
     return results
