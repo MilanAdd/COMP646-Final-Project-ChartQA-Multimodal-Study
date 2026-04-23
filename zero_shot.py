@@ -9,6 +9,7 @@ from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration
 
 import config
 from dataset import (prepare_data,correct_relaxed,normalize_answer,get_chart_type_lookup)
+from eval import classify_answer_type
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Zero-shot ChartQA evaluation with Qwen2.5-VL")
@@ -96,7 +97,7 @@ def main():
         pred_ans = extract_answer(raw_text)
         is_correct = correct_relaxed(pred_ans,gold_ans)
 
-        results.append({"correct":is_correct,"is_unk":False,"pred_answer":pred_ans,"gold_answer":gold_ans,"question":question,"question_type":question_type,"chart_type":chart_type,"raw_output":raw_text})
+        results.append({"correct":is_correct,"is_unk":False,"pred_answer":pred_ans,"gold_answer":gold_ans,"question":question,"question_type":question_type,"chart_type":chart_type,"answer_type":classify_answer_type(gold_ans),"raw_output":raw_text})
 
         if (idx+1) % 100 == 0:
             intermediate_progress = [r for r in results if not r["is_unk"]]
