@@ -173,7 +173,7 @@ def make_combined_figure(examples:list,model:ChartQAModel,gradcam:GradCAM,rollou
         print(f"[GradCAM] No examples to plot for: {title}")
         return
     
-    fig,axes = plt.subplots(n,2,figsize=(10,4*n))
+    fig,axes = plt.subplots(n,3,figsize=(14,4*n))
     if n==1:
         axes = [list(axes)]
 
