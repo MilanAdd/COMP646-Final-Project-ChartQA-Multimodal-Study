@@ -177,7 +177,7 @@ def build_chart_type_lookup(annotations_dir:str,save_path:str=CHART_TYPE_LOOKUP_
         json_files = [f for f in os.listdir(split_dir) if f.endswith(".json")]
 
         for fname in json_files:
-            imgname = fname.replace(".json","png")
+            imgname = fname.replace(".json",".png")
             fpath = os.path.join(split_dir,fname)
             try:
                 with open(fpath) as f:
