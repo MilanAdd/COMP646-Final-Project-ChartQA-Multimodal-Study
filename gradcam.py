@@ -175,7 +175,7 @@ def make_combined_figure(examples:list,model:ChartQAModel,gradcam:GradCAM,rollou
     
     fig,axes = plt.subplots(n,2,figsize=(10,4*n))
     if n==1:
-        axes = [axes]
+        axes = [list(axes)]
 
     fig.suptitle(title,fontsize=13,fontweight="bold",y=1.01)
 
