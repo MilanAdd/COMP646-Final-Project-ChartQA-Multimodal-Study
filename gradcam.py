@@ -272,6 +272,8 @@ def main():
     model = ChartQAModel(num_classes=num_classes,use_lora=use_lora).to(device)
     load_checkpoint(args.checkpoint,model)
 
+    model.visual_encoder.config._attn_implementation = "eager"
+
     gradcam = GradCAM(model)
     rollout = AttentionRollout(model)
 
