@@ -197,12 +197,12 @@ def plot_breakdown_by_answer_type(split:str="test",save:bool=True)-> None:
         bars = ax.bar(x+offset,accs,width=width,label=LABELS[mode],color=COLORS[mode],edgecolor="white")
         for bar,acc in zip(bars,accs):
             if acc > 2:
-                ax.text(bar.get_x()+bar.get_width()/2,bar.get_height()+0.5,f"{acc:0f}%",ha="center",va="bottom",fontsize=7)
+                ax.text(bar.get_x()+bar.get_width()/2,bar.get_height()+0.5,f"{acc:.0f}%",ha="center",va="bottom",fontsize=7)
     ax.set_xticks(x)
     ax.set_xticklabels(["Binary","Numerical","Textual"])
     ax.set_ylabel("Relaxed Accuracy (%)")
     ax.set_xlabel("Answer Type")
-    ax.set_title(f"Accuracy by Answer Type = ChartQA {split.capitalize()} Set")
+    ax.set_title(f"Accuracy by Answer Type — ChartQA {split.capitalize()} Set")
     ax.set_ylim(0,100)
     ax.yaxis.set_major_formatter(mticker.FormatStrFormatter("%.0f%%"))
     ax.legend(loc="upper right")
