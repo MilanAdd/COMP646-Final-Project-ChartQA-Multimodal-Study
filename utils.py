@@ -193,7 +193,7 @@ def plot_breakdown_by_answer_type(split:str="test",save:bool=True)-> None:
 
     for i,(mode,breakdown) in enumerate(all_data.items()):
         accs = [breakdown.get(cat,{}).get("accuracy",0)*100 for cat in cats]
-        offset = (i-n_modes.2+0.5)*width
+        offset = (i-n_modes/2+0.5)*width
         bars = ax.bar(x+offset,accs,width=width,label=LABELS[mode],color=COLORS[mode],edgecolor="white")
         for bar,acc in zip(bars,accs):
             if acc > 2:
