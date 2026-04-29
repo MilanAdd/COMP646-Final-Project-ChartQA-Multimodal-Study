@@ -166,6 +166,54 @@ def plot_breakdown_by_type(breakdown_key:str,split:str="test",save:bool=True) ->
     
     plt.close()
 
+def plot_breakdown_by_answer_type(split:str="test",save:bool=True)-> None:
+    modes = ["frozen","lora","zeroshot"]
+    all_data = {}
+
+    for mode in modes:
+        try:
+            data = load_eval(mode,split)
+            brkdwn = data["breakdowns"].get("by_answer_type",{})
+            if brkdwn:
+                all_data[mode] = brkdwn
+        except:
+            pass
+    
+    if not all_data:
+        print("[Plot] No answer type data found. Rerun evals with updated evaluate.py script")
+        return
+
+    cats = ["binary","numerical","textual"]
+    n_cats = len(cats)
+    n_modes = len(all_data)
+    width = 0.8/n_modes
+    x = np.arange(n_cats)
+
+    fig,ax = plt.subplots(figsize=(7,4.5))
+
+    for i,(mode,breakdown) in enumerate(all_data.items()):
+        accs = [breakdown.get(cat,{}).get("accuracy",0)*100 for cat in cats]
+        offset = (i-n_modes.2+0.5)*width
+        bars = ax.bar(x+offset,accs,width=width,label=LABELS[mode],color=COLORS[mode],edgecolor="white")
+        for bar,acc in zip(bars,accs):
+            if acc > 2:
+                ax.text(bar.get_x()+bar.get_width()/2,bar.get_height()+0.5,f"{acc:0f}%",ha="center",va="bottom",fontsize=7)
+    ax.set_xticks(x)
+    ax.set_xticklabels(["Binary","Numerical","Textual"])
+    ax.set_ylabel("Relaxed Accuracy (%)")
+    ax.set_xlabel("Answer Type")
+    ax.set_title(f"Accuracy by Answer Type = ChartQA {split.capitalize()} Set")
+    ax.set_ylim(0,100)
+    ax.yaxis.set_major_formatter(mticker.FormatStrFormatter("%.0f%%"))
+    ax.legend(loc="upper right")
+    plt.tight_layout()
+
+    if save:
+        path = os.path.join(config.FIGURES_DIR,f"breakdown_by_answer_type_{split}.pdf")
+        plt.savefig(path,format="pdf",bbox_inches="tight")
+        print(f"[Plot] Saved to {path}")
+    plt.close()
+
 def plot_cross_table(mode:str,split:str="test",save:bool=True) -> None:
     try:
         data = load_eval(mode,split)
@@ -277,6 +325,8 @@ if __name__ == "__main__":
 
     plot_breakdown_by_type("by_question_type")
     plot_breakdown_by_type("by_chart_type")
+    plot_breakdown_by_answer_type()
+
 
     for mode in ("frozen","lora","zeroshot"):
         try:
