@@ -289,7 +289,7 @@ def make_combined_correct_incorrect(correct_ex:list,incorrect_ex:list,model:Char
     
     if 0< n_correct < n:
         divider_y = 1 - n_correct/n
-        fig.add_artist(plt.Line2D([0.02,0.98],[divider_y,divider_y],transform=fig.transFigure,color="gray",linewidth=1,linetype="--"))
+        fig.add_artist(plt.Line2D([0.02,0.98],[divider_y,divider_y],transform=fig.transFigure,color="gray",linewidth=1,linestyle="--"))
 
     plt.tight_layout()
     plt.savefig(save_path,format="pdf",dpi=300,bbox_inches="tight")
