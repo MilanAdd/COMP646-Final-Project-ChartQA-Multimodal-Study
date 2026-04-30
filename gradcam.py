@@ -398,12 +398,8 @@ def main():
     with open(args.eval_results) as f:
         eval_data = json.load(f)
 
-    """
     correct_ex = eval_data["examples"]["correct"][:args.n_correct]
     incorrect_ex = eval_data["examples"]["incorrect"][:args.n_incorrect]
-    """
-    correct_ex = eval_data["examples"]["correct"][:2]
-    incorrect_ex = eval_data["examples"]["incorrect"][:2]
 
     answer2idx,_,_,_ = prepare_data()
     idx2answer = {v:k for k,v in answer2idx.items()}
