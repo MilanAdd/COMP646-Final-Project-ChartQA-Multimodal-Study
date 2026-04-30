@@ -232,6 +232,71 @@ def make_combined_figure(examples:list,model:ChartQAModel,gradcam:GradCAM,rollou
     plt.close()
     print(f"[GradCAM] Saved figure to {save_path}")
 
+def make_combined_correct_incorrect(correct_ex:list,incorrect_ex:list,model:ChartQAModel,gradcam:GradCAM,rollout:AttentionRollout,tokenizer,device:torch.device,idx2answer:dict,alpha:float,save_path:str)->None:
+    ex = correct_ex + incorrect_ex
+    n = len(ex)
+    n_correct = len(correct_ex)
+
+    if n==0:
+        return
+    
+    fig,axes = plt.subplots(n,3,figsize=(14,4*n))
+    if n==1:
+        axes = [list(axes)]
+    
+    fig.suptitle("GradCAM & Attention Rollout - Correct and Incorrect Predictions (LoRA CLIP)",fontsize=13,fontweight="bold",y=1.01)
+
+    for row_idx,examp in enumerate(ex):
+        question = examp["question"]
+        gold_ans = examp["gold_answer"]
+        pred_ans = examp["pred_answer"]
+        chart_type = examp["chart_type"]
+        question_type = examp["question_type"]
+
+        pil_img = _load_img_for_example(examp)
+        if pil_img is None:
+            continue
+
+        pixel_vals = CLIP_IMG_TRANSFORM(pil_img.convert("RGB")).unsqueeze(0).to(device)
+        tokens = tokenize_questions([question],tokenizer,device)
+
+        with torch.enable_grad():
+            gradcam_map = gradcam.generate(pixel_vals,tokens["input_ids"],tokens["attention_mask"])
+        rollout_map = rollout.generate(pixel_vals)
+
+        gc_overlay = overlay_heatmap(pil_img,gradcam_map,alpha=alpha,colormap="jet")
+        roll_overlay = overlay_heatmap(pil_img,rollout_map,alpha=alpha,colormap="viridis")
+
+        ax_img = axes[row_idx][0]
+        ax_grad = axes[row_idx][1]
+        ax_roll = axes[row_idx][2]
+
+        ax_img.imshow(pil_img.resize((config.IMAGE_SIZE,config.IMAGE_SIZE),Image.LANCZOS))
+        ax_img.axis("off")
+        ax_grad.imshow(gc_overlay)
+        ax_grad.axis("off")
+        ax_roll.imshow(roll_overlay)
+        ax_roll.axis("off")
+
+        status = "Correct" if row_idx < n_correct else "Incorrect"
+        color = "green" if row_idx < n_correct else "red"
+        ax_img.set_title(f"[{status}]",fontsize=8,color=color,pad=2)
+
+        caption = (f"Chart: {chart_type} | Q: {question[:70]}"
+                   f"{'...' if len(question)>70 else ''}\n"
+                   f"Gold: {gold_ans}   Pred: {pred_ans}")
+        fig.text(0.5,1-(row_idx+1)/n + 0.005/n,caption,ha="center",va="top",fontsize=7,transform=fig.transFigure,wrap=True)
+    
+    if 0< n_correct < n:
+        divider_y = 1 - n_correct/n
+        fig.add_artist(plt.Line2D([0.02,0.98],[divider_y,divider_y],transform=fig.transFigure,color="gray",linewidth=1,linestype="--"))
+
+    plt.tight_layout()
+    plt.savefig(save_path,format="pdf",dpi=300,bbox_inches="tight")
+    plt.close()
+    print(f"[GradCAM] Saved combined figure to {save_path}")
+
+
 
 
 def _load_img_for_example(example:dict):
@@ -260,8 +325,12 @@ def main():
     with open(args.eval_results) as f:
         eval_data = json.load(f)
 
+    """
     correct_ex = eval_data["examples"]["correct"][:args.n_correct]
     incorrect_ex = eval_data["examples"]["incorrect"][:args.n_incorrect]
+    """
+    correct_ex = eval_data["examples"]["correct"][:2]
+    incorrect_ex = eval_data["examples"]["incorrect"][:2]
 
     answer2idx,_,_,_ = prepare_data()
     idx2answer = {v:k for k,v in answer2idx.items()}
@@ -279,9 +348,12 @@ def main():
 
     common_kwargs = dict(model=model,gradcam=gradcam,rollout=rollout,tokenizer=tokenizer,device=device,idx2answer=idx2answer,alpha=args.alpha)
 
+    """
     make_combined_figure(**common_kwargs,examples=correct_ex,title=f"GradCAM vs Attention Rollout - (Correct examples) ({args.mode})",save_path=os.path.join(config.FIGURES_DIR,f"gradcam_{args.mode}_correct.pdf"))
 
     make_combined_figure(**common_kwargs,examples=incorrect_ex,title=f"GradCAM vs Attention Rollout - (Incorrect predictions) ({args.mode})",save_path=os.path.join(config.FIGURES_DIR,f"gradcam_{args.mode}_incorrect.pdf"))
+    """
+    make_combined_correct_incorrect(correct_ex=correct_ex,incorrect_ex=incorrect_ex,model=model,gradcam=gradcam,rollout=rollout,tokenizer=tokenizer,device=device,idx2answer=idx2answer,alpha=args.alpha,save_path=os.path.join(config.FIGURES_DIR,f"gradcam_{args.mode}_combined.pdf"))
     gradcam.remove_hooks()
     rollout.remove_hooks()
     print("[GradCAM] Done")

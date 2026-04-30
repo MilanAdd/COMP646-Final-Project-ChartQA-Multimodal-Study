@@ -35,25 +35,37 @@ $PYTHON -m pip install --quiet matplotlib
 # ---------------------------------------------------------------------------
 # GradCAM for frozen CLIP
 # ---------------------------------------------------------------------------
-echo "Running GradCAM for frozen CLIP..."
-srun $PYTHON gradcam.py \
-    --checkpoint /scratch/ma200/chartqa_output/checkpoints/best_frozen.pt \
-    --mode frozen \
-    --eval-results /scratch/ma200/chartqa_output/results/eval_frozen_test.json \
-    --n-correct 5 \
-    --n-incorrect 5 \
-    --alpha 0.5
+#echo "Running GradCAM for frozen CLIP..."
+#srun $PYTHON gradcam.py \
+#    --checkpoint /scratch/ma200/chartqa_output/checkpoints/best_frozen.pt \
+#    --mode frozen \
+#    --eval-results /scratch/ma200/chartqa_output/results/eval_frozen_test.json \
+#    --n-correct 3 \
+#    --n-incorrect 3 \
+#    --alpha 0.5
 
 # ---------------------------------------------------------------------------
 # GradCAM for LoRA CLIP
+# ---------------------------------------------------------------------------
+#echo "Running GradCAM for LoRA CLIP..."
+#srun $PYTHON gradcam.py \
+#    --checkpoint /scratch/ma200/chartqa_output/checkpoints/best_lora.pt \
+#    --mode lora \
+#    --eval-results /scratch/ma200/chartqa_output/results/eval_lora_test.json \
+#    --n-correct 3 \
+#    --n-incorrect 3 \
+#    --alpha 0.5
+
+# ---------------------------------------------------------------------------
+# GradCAM combined figure for LoRA CLIP (2 correct + 2 incorrect)
 # ---------------------------------------------------------------------------
 echo "Running GradCAM for LoRA CLIP..."
 srun $PYTHON gradcam.py \
     --checkpoint /scratch/ma200/chartqa_output/checkpoints/best_lora.pt \
     --mode lora \
     --eval-results /scratch/ma200/chartqa_output/results/eval_lora_test.json \
-    --n-correct 5 \
-    --n-incorrect 5 \
+    --n-correct 2 \
+    --n-incorrect 2 \
     --alpha 0.5
 
 # ---------------------------------------------------------------------------
