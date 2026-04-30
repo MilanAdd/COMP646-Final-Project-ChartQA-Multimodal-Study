@@ -64,8 +64,8 @@ srun $PYTHON gradcam.py \
     --checkpoint /scratch/ma200/chartqa_output/checkpoints/best_lora.pt \
     --mode lora \
     --eval-results /scratch/ma200/chartqa_output/results/eval_lora_test.json \
-    --n-correct 2 \
-    --n-incorrect 2 \
+    --n-correct 3 \
+    --n-incorrect 3 \
     --alpha 0.5
 
 # ---------------------------------------------------------------------------
