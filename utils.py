@@ -205,7 +205,7 @@ def plot_breakdown_by_answer_type(split:str="test",save:bool=True)-> None:
     ax.set_title(f"Accuracy by Answer Type — ChartQA {split.capitalize()} Set")
     ax.set_ylim(0,100)
     ax.yaxis.set_major_formatter(mticker.FormatStrFormatter("%.0f%%"))
-    ax.legend(loc="upper left",fontsize=8,framalpha=0.9)
+    ax.legend(loc="upper left",fontsize=8,framealpha=0.9)
     plt.tight_layout()
 
     if save:
