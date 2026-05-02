@@ -2,9 +2,12 @@
 # Show status of a submitted ChartQA job.
 #
 # Usage:
-#   ./status.sh train_frozen
-#   ./status.sh train_lora
-#   ./status.sh eval_zeroshot
+#   ./jobs/status.sh train_frozen
+#   ./jobs/status.sh train_lora
+#   ./jobs/status.sh zero_shot
+#
+# Requires NETID to be set:
+#   export NETID=your_netid
 
 source "$(dirname "$0")/config.sh"
 
@@ -32,14 +35,12 @@ INFO=$(ssh $REMOTE "
         echo \"ACTIVE|\$STATUS\"
     fi
 
-    # Tail latest log output
     OUTFILE=\$(ls $REMOTE_DIR/logs/${JOB_NAME}_${JOB_ID}.out 2>/dev/null)
     if [ -f \"\$OUTFILE\" ]; then
         echo '---OUTPUT---'
         tail -15 \"\$OUTFILE\"
     fi
 
-    # Show any real errors (filter noise)
     ERRFILE=\$(ls $REMOTE_DIR/logs/${JOB_NAME}_${JOB_ID}.err 2>/dev/null)
     if [ -f \"\$ERRFILE\" ] && [ -s \"\$ERRFILE\" ]; then
         ERRS=\$(grep -v '^\[notice\]' \"\$ERRFILE\" | grep -v '^WARNING' | grep -v 'tqdm' | tail -5)

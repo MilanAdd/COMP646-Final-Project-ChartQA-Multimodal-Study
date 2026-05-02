@@ -1,23 +1,27 @@
 #!/bin/bash
-# Download results, figures, and checkpoints from NOTS to local machine.
+# Download results, figures, and checkpoints from the cluster to local machine.
 #
 # Usage:
-#   ./download.sh            — download results + figures only
-#   ./download.sh --all      — also download checkpoints (large)
+#   ./jobs/download.sh            — download results + figures only
+#   ./jobs/download.sh --all      — also download checkpoints (large)
+#
+# Requires NETID to be set:
+#   export NETID=your_netid
 
 source "$(dirname "$0")/config.sh"
+
 LOCAL_OUTPUT="./nots_output"
 mkdir -p "$LOCAL_OUTPUT/results" "$LOCAL_OUTPUT/figures"
 
-echo "Downloading results and figures from NOTS ..."
+echo "Downloading results and figures from cluster..."
 
-scp -r "$REMOTE:/storage/hpc/work/comp646/ma200/chartqa_project/results/" "$LOCAL_OUTPUT/"
-scp -r "$REMOTE:/storage/hpc/work/comp646/ma200/chartqa_project/checkpoints/" "$LOCAL_OUTPUT/"
+scp -r "$REMOTE:${WORK}/chartqa_project/results/" "$LOCAL_OUTPUT/"
+scp -r "$REMOTE:${WORK}/chartqa_project/figures/"  "$LOCAL_OUTPUT/"
 
 if [ "$1" = "--all" ]; then
-    echo "Downloading checkpoints (this may take a while) ..."
+    echo "Downloading checkpoints (this may take a while)..."
     mkdir -p "$LOCAL_OUTPUT/checkpoints"
-    scp -r "$REMOTE:$REMOTE_DIR/checkpoints/" "$LOCAL_OUTPUT/"
+    scp -r "$REMOTE:${WORK}/chartqa_project/checkpoints/" "$LOCAL_OUTPUT/"
 fi
 
 if [ $? -eq 0 ]; then
@@ -26,5 +30,5 @@ if [ $? -eq 0 ]; then
     ls -lh "$LOCAL_OUTPUT/results/" 2>/dev/null
     ls -lh "$LOCAL_OUTPUT/figures/" 2>/dev/null
 else
-    echo "Download failed. Check if jobs have completed (./status.sh <job_name>)."
+    echo "Download failed. Check if jobs have completed: ./jobs/status.sh <job_name>"
 fi

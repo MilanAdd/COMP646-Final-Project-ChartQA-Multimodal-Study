@@ -16,54 +16,33 @@ nvidia-smi
 
 module purge
 
-PYTHON=/scratch/ma200/venvs/chartqa/bin/python
+NETID=__NETID__
+PYTHON=/scratch/${NETID}/venvs/chartqa/bin/python
+SCRATCH=/scratch/${NETID}
+WORK=/storage/hpc/work/comp646/${NETID}
 
 echo "Python:    $($PYTHON --version)"
 echo "PyTorch:   $($PYTHON -c 'import torch; print(torch.__version__)')"
 echo "CUDA:      $($PYTHON -c 'import torch; print(torch.cuda.is_available())')"
 
-export HF_HOME=/scratch/ma200/hf_cache
-export HF_DATASETS_CACHE=/scratch/ma200/hf_cache/datasets
-export CHARTQA_DATA_DIR=/scratch/ma200/chartqa_data
-export CHARTQA_OUTPUT_DIR=/scratch/ma200/chartqa_output
+export HF_HOME=${SCRATCH}/hf_cache
+export HF_DATASETS_CACHE=${SCRATCH}/hf_cache/datasets
+export CHARTQA_DATA_DIR=${SCRATCH}/chartqa_data
+export CHARTQA_OUTPUT_DIR=${SCRATCH}/chartqa_output
 
-mkdir -p /scratch/ma200/chartqa_output/figures
+mkdir -p ${SCRATCH}/chartqa_output/figures
 
 echo "Installing matplotlib..."
 $PYTHON -m pip install --quiet matplotlib
 
 # ---------------------------------------------------------------------------
-# GradCAM for frozen CLIP
-# ---------------------------------------------------------------------------
-#echo "Running GradCAM for frozen CLIP..."
-#srun $PYTHON gradcam.py \
-#    --checkpoint /scratch/ma200/chartqa_output/checkpoints/best_frozen.pt \
-#    --mode frozen \
-#    --eval-results /scratch/ma200/chartqa_output/results/eval_frozen_test.json \
-#    --n-correct 3 \
-#    --n-incorrect 3 \
-#    --alpha 0.5
-
-# ---------------------------------------------------------------------------
-# GradCAM for LoRA CLIP
-# ---------------------------------------------------------------------------
-#echo "Running GradCAM for LoRA CLIP..."
-#srun $PYTHON gradcam.py \
-#    --checkpoint /scratch/ma200/chartqa_output/checkpoints/best_lora.pt \
-#    --mode lora \
-#    --eval-results /scratch/ma200/chartqa_output/results/eval_lora_test.json \
-#    --n-correct 3 \
-#    --n-incorrect 3 \
-#    --alpha 0.5
-
-# ---------------------------------------------------------------------------
-# GradCAM combined figure for LoRA CLIP (2 correct + 2 incorrect)
+# GradCAM combined figure for LoRA CLIP (3 correct + 3 incorrect)
 # ---------------------------------------------------------------------------
 echo "Running GradCAM for LoRA CLIP..."
 srun $PYTHON gradcam.py \
-    --checkpoint /scratch/ma200/chartqa_output/checkpoints/best_lora.pt \
+    --checkpoint ${SCRATCH}/chartqa_output/checkpoints/best_lora.pt \
     --mode lora \
-    --eval-results /scratch/ma200/chartqa_output/results/eval_lora_test.json \
+    --eval-results ${SCRATCH}/chartqa_output/results/eval_lora_test.json \
     --n-correct 3 \
     --n-incorrect 3 \
     --alpha 0.5
@@ -72,8 +51,8 @@ srun $PYTHON gradcam.py \
 # Copy figures back to WORK
 # ---------------------------------------------------------------------------
 echo "Copying figures to WORK..."
-mkdir -p /storage/hpc/work/comp646/ma200/chartqa_project/figures 2>/dev/null || true
-cp /scratch/ma200/chartqa_output/figures/gradcam_*.pdf \
-   /storage/hpc/work/comp646/ma200/chartqa_project/figures/ 2>/dev/null || true
+mkdir -p ${WORK}/chartqa_project/figures 2>/dev/null || true
+cp ${SCRATCH}/chartqa_output/figures/gradcam_*.pdf \
+   ${WORK}/chartqa_project/figures/ 2>/dev/null || true
 
 echo "Job finished at $(date)"

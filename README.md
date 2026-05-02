@@ -8,9 +8,9 @@ We study whether photo-pretrained vision encoders can understand charts through 
 
 Beyond accuracy, GradCAM and Attention Rollout are applied to both trained models to understand *why* they succeed or fail.
 
-**Reproducibility note:** All reported results were obtained on the Rice University NOTS cluster using a single NVIDIA Tesla V100 or L40S GPU. Set `CHARTQA_DATA_DIR` and `CHARTQA_OUTPUT_DIR` before running any script (see Setup below).
+**Reproducibility note:** All reported results were obtained on an HPC cluster using a single NVIDIA Tesla V100 or L40S GPU. Set `CHARTQA_DATA_DIR` and `CHARTQA_OUTPUT_DIR` to appropriate paths on your system before running any script (see Setup below).
 
-------
+---
 
 ## Pipeline
 
@@ -40,19 +40,26 @@ zero_shot.py — Qwen2.5-VL-7B-Instruct greedy decoding
 git clone https://github.com/MilanAdd/COMP646-Final-Project-ChartQA-Multimodal-Study
 cd COMP646-Final-Project-ChartQA-Multimodal-Study
 
-python -m venv /scratch/$USER/venvs/chartqa
-source /scratch/$USER/venvs/chartqa/bin/activate
+python -m venv venv
+source venv/bin/activate
 pip install torch torchvision transformers datasets peft pillow matplotlib
 ```
 
 **2. Set environment variables**
 ```bash
-export CHARTQA_DATA_DIR=/scratch/$USER/chartqa_data
-export CHARTQA_OUTPUT_DIR=/scratch/$USER/chartqa_output
-export HF_HOME=/scratch/$USER/hf_cache
+export CHARTQA_DATA_DIR=<path where ChartQA data will be cached>
+export CHARTQA_OUTPUT_DIR=<path for checkpoints, results, and figures>
+export HF_HOME=<path for HuggingFace model cache>
 ```
 
-**3. Submit jobs (SLURM)**
+**3. For NOTS users — set your NetID first**
+```bash
+export NETID=your_netid
+```
+
+The SLURM scripts use `__NETID__` as a placeholder which `launch.sh` replaces automatically. All scratch and work paths are derived from `$NETID` so no manual path editing is needed.
+
+**4. Submit jobs**
 ```bash
 ./jobs/launch.sh train_frozen     # train frozen CLIP baseline
 ./jobs/launch.sh train_lora       # train LoRA CLIP
@@ -60,6 +67,8 @@ export HF_HOME=/scratch/$USER/hf_cache
 ./jobs/launch.sh zero_shot        # run Qwen2.5-VL zero-shot
 ./jobs/launch.sh gradcam          # generate GradCAM figures
 ```
+
+If you are not using SLURM, the Python scripts can be run directly as long as the environment variables above are set.
 
 ---
 
@@ -76,7 +85,7 @@ export HF_HOME=/scratch/$USER/hf_cache
 ├── zero_shot.py        # Qwen2.5-VL inference
 ├── utils.py            # figure generation for report
 └── jobs/
-    ├── config.sh       # cluster paths
+    ├── config.sh       # cluster config — set NETID before sourcing
     ├── launch.sh       # job submission helper
     ├── train.slurm
     ├── evaluate.slurm
@@ -102,9 +111,11 @@ Checkpoints are saved to `$CHARTQA_OUTPUT_DIR/checkpoints/` as `best_frozen.pt` 
 
 ## Generating Figures Locally
 
-After downloading eval results from the cluster:
+After running evaluations on your cluster, copy the eval JSON files
+(`eval_frozen_test.json`, `eval_lora_test.json`, `eval_zeroshot_test.json`)
+to a local `results/` directory, then run:
+
 ```bash
-scp "ma200@nots.rice.edu:/storage/hpc/work/comp646/ma200/chartqa_project/results/eval_*.json" ./results/
 python utils.py
 ```
 

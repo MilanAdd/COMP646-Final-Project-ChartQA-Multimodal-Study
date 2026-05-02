@@ -16,22 +16,24 @@ nvidia-smi
 
 module purge
 
-PYTHON=/scratch/ma200/venvs/chartqa/bin/python
+NETID=__NETID__
+PYTHON=/scratch/${NETID}/venvs/chartqa/bin/python
+SCRATCH=/scratch/${NETID}
+WORK=/storage/hpc/work/comp646/${NETID}
 
 echo "Python:    $($PYTHON --version)"
 echo "PyTorch:   $($PYTHON -c 'import torch; print(torch.__version__)')"
 echo "CUDA:      $($PYTHON -c 'import torch; print(torch.cuda.is_available())')"
 
-export HF_HOME=/scratch/ma200/hf_cache
-export HF_DATASETS_CACHE=/scratch/ma200/hf_cache/datasets
+export HF_HOME=${SCRATCH}/hf_cache
+export HF_DATASETS_CACHE=${SCRATCH}/hf_cache/datasets
+export CHARTQA_DATA_DIR=${SCRATCH}/chartqa_data
+export CHARTQA_OUTPUT_DIR=${SCRATCH}/chartqa_output
 
-export CHARTQA_DATA_DIR=/scratch/ma200/chartqa_data
-export CHARTQA_OUTPUT_DIR=/scratch/ma200/chartqa_output
+mkdir -p ${SCRATCH}/chartqa_output/checkpoints
+mkdir -p ${SCRATCH}/chartqa_output/results
 
-mkdir -p /scratch/ma200/chartqa_output/checkpoints
-mkdir -p /scratch/ma200/chartqa_output/results
-
-cd /home/__NETID__/chartqa_project
+cd /home/${NETID}/chartqa_project
 
 srun $PYTHON train.py \
     --mode lora \
@@ -40,10 +42,10 @@ srun $PYTHON train.py \
     --batch-size 64 \
     --workers 4
 
-echo "Copying results back to WORK ..."
-mkdir -p /storage/hpc/work/comp646/ma200/chartqa_project/checkpoints
-mkdir -p /storage/hpc/work/comp646/ma200/chartqa_project/results
-cp -r /scratch/ma200/chartqa_output/checkpoints/ /storage/hpc/work/comp646/ma200/chartqa_project/
-cp -r /scratch/ma200/chartqa_output/results/     /storage/hpc/work/comp646/ma200/chartqa_project/
+echo "Copying results back to WORK..."
+mkdir -p ${WORK}/chartqa_project/checkpoints
+mkdir -p ${WORK}/chartqa_project/results
+cp -r ${SCRATCH}/chartqa_output/checkpoints/ ${WORK}/chartqa_project/
+cp -r ${SCRATCH}/chartqa_output/results/     ${WORK}/chartqa_project/
 
 echo "Job finished at $(date)"

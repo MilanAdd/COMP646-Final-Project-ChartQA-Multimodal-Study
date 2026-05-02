@@ -1,10 +1,13 @@
 #!/bin/bash
-# Cancel a running ChartQA job on NOTS.
+# Cancel a running ChartQA job on the cluster.
 #
 # Usage:
-#   ./stop.sh train_frozen
-#   ./stop.sh train_lora
-#   ./stop.sh eval_zeroshot
+#   ./jobs/stop.sh train_frozen
+#   ./jobs/stop.sh train_lora
+#   ./jobs/stop.sh zero_shot
+#
+# Requires NETID to be set:
+#   export NETID=your_netid
 
 source "$(dirname "$0")/config.sh"
 
